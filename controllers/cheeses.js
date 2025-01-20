@@ -33,5 +33,30 @@ router.post('/', (req, res) => {
     return res.status(201).json();  // 201: resource created
 });
 
+// PUT: {id} update selected cheese
+router.put('/:id', (req, res) => {
+    let index = cheeses.findIndex(c => c.id == req.params.id);
+
+    if (index == -1) {
+        return res.status(404).json({ msg: 'Not Found' });
+    }
+
+    cheeses[index].name = req.body.name;
+    return res.status(204).json(); // 204: resource modified
+});
+
+
+// DELETE: {id} remove selected cheese
+router.delete('/:id', (req, res) => {
+    let index = cheeses.findIndex(c => c.id == req.params.id);
+
+    if (index == -1) {
+        return res.status(404).json({ msg: 'Not Found' });
+    }
+
+    cheeses.splice(index, 1);
+    return res.status(204).json();
+});
+
 // make controller public to rest of the app
 export default router;
