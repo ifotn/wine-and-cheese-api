@@ -50,14 +50,64 @@ router.get('/:id', (req, res) => {
     return res.status(200).json(cheeses[index]);
 });
 
-// POST: add new cheese from POST body
+/**
+ * @swagger
+ * /api/v1/cheeses:
+ *   post:
+ *     summary: add new cheese from POST body
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Resource created
+ *       400:
+ *         description: Bad request
+ */
 router.post('/', (req, res) => {
     cheeses.push(req.body);
 
     return res.status(201).json();  // 201: resource created
 });
 
-// PUT: {id} update selected cheese
+/**
+ * @swagger
+ * /api/v1/cheeses/{id}:
+ *   put:
+ *     summary: update selected cheese from request body
+ *     parameters:
+ *       -name: id
+ *       in: path
+ *       required: true
+ *       schema:
+ *         type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *     responses:
+ *       204:
+ *         description: Resource updated
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ */
 router.put('/:id', (req, res) => {
     let index = cheeses.findIndex(c => c.id == req.params.id);
 
@@ -70,7 +120,23 @@ router.put('/:id', (req, res) => {
 });
 
 
-// DELETE: {id} remove selected cheese
+/**
+ * @swagger
+ * /api/v1/cheeses/{id}:
+ *   delete:
+ *     summary: Remove selected cheese
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         schema:
+ *           type: integer
+ *           required: true
+ *     responses:
+ *       204:
+ *         description: Resource updated (removed)
+ *       404:
+ *         description: Not found
+ */
 router.delete('/:id', (req, res) => {
     let index = cheeses.findIndex(c => c.id == req.params.id);
 
