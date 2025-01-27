@@ -23,7 +23,23 @@ router.get('/', (req, res) => {
     return res.status(200).json(cheeses);
 });
 
-// GET: {id} return selected cheese by id
+/**
+ * @swagger
+ * /api/v1/cheeses/{id}:
+ *   get:
+ *     summary: Find cheese by its id
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         schema:
+ *           type: integer
+ *           required: true
+ *     responses:
+ *       200:
+ *         description: Returns a single cheese
+ *       404:
+ *         description: Not found
+ */
 router.get('/:id', (req, res) => {
     let index = cheeses.findIndex(c => c.id == req.params.id);
 
