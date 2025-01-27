@@ -1,5 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+// swagger for api docs
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 // controllers
 import cheesesController from './controllers/cheeses.js';
@@ -8,6 +11,21 @@ import cheesesController from './controllers/cheeses.js';
 const app = express();
 
 app.use(bodyParser.json());
+
+// swagger config
+const docOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Cheese API',
+            version: '1.0.0'
+        }
+    },
+    apis: ['./controllers/*.js'] // where to find api methods (controllers)
+};
+
+const openapiSpecification = swaggerJSDoc(docOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
 // url dispatching
 app.use('/api/v1/cheeses', cheesesController);

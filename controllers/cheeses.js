@@ -10,7 +10,15 @@ let cheeses = [
     { id: 3, name: 'Leicester' }
 ];
 
-// GET: return all cheeses
+/**
+ * @swagger
+ * /api/v1/cheeses:
+ *   get:
+ *     summary: Retrieve all cheeses
+ *     responses:
+ *       200:
+ *         description: A list of cheeses
+ */
 router.get('/', (req, res) => {
     return res.status(200).json(cheeses);
 });
