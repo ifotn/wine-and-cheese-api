@@ -1,14 +1,16 @@
 import express from 'express';
+// model ref
+import Cheese from '../models/cheese.js';
 
 // create express router object
 const router = express.Router();
 
 // mock some data
-let cheeses = [
-    { id: 1, name: 'Marble' },
-    { id: 2, name: 'Camembert' },
-    { id: 3, name: 'Leicester' }
-];
+// let cheeses = [
+//     { id: 1, name: 'Marble' },
+//     { id: 2, name: 'Camembert' },
+//     { id: 3, name: 'Leicester' }
+// ];
 
 /**
  * @swagger
@@ -19,7 +21,14 @@ let cheeses = [
  *       200:
  *         description: A list of cheeses
  */
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+    // use Cheese model to fetch all documents from cheeses collection in db
+    let cheeses = await Cheese.find();
+
+    if (!cheeses) {
+        return res.status(204).json({ err: 'No Results' });
+    }
+
     return res.status(200).json(cheeses);
 });
 
@@ -40,14 +49,14 @@ router.get('/', (req, res) => {
  *       404:
  *         description: Not found
  */
-router.get('/:id', (req, res) => {
-    let index = cheeses.findIndex(c => c.id == req.params.id);
+router.get('/:id', async (req, res) => {
+    let cheese = await Cheese.findById(req.params.id);
 
-    if (index == -1) {
+    if (!cheese) {
         return res.status(404).json({ msg: 'Not Found' });
     }
 
-    return res.status(200).json(cheeses[index]);
+    return res.status(200).json(cheese);
 });
 
 /**
@@ -72,10 +81,14 @@ router.get('/:id', (req, res) => {
  *       400:
  *         description: Bad request
  */
-router.post('/', (req, res) => {
-    cheeses.push(req.body);
-
-    return res.status(201).json();  // 201: resource created
+router.post('/', async (req, res) => {
+    try {
+        await Cheese.create(req.body);
+        return res.status(201).json();  // 201: resource created
+    }
+    catch (err) {
+        return res.status(400).json({ err: `Bad Request: ${err}` });
+    }
 });
 
 /**
@@ -108,15 +121,24 @@ router.post('/', (req, res) => {
  *       404:
  *         description: Not found
  */
-router.put('/:id', (req, res) => {
-    let index = cheeses.findIndex(c => c.id == req.params.id);
+router.put('/:id', async (req, res) => {
+    try {
+        let cheese = await Cheese.findById(req.params.id);
 
-    if (index == -1) {
-        return res.status(404).json({ msg: 'Not Found' });
+        if (!cheese) {
+            return res.status(404).json({ msg: 'Not Found' });
+        }
+
+        if (req.params.id != req.body._id) {
+            return res.status(400).json({ msg: 'Bad Request: _ids do not match' });
+        }
+
+        await Cheese.findByIdAndUpdate(req.params.id, req.body);
+        return res.status(204).json(); // 204: resource modified
     }
-
-    cheeses[index].name = req.body.name;
-    return res.status(204).json(); // 204: resource modified
+    catch (err) {
+        return res.status(400).json({ err: `Bad Request: ${err}` });
+    }
 });
 
 
@@ -137,14 +159,14 @@ router.put('/:id', (req, res) => {
  *       404:
  *         description: Not found
  */
-router.delete('/:id', (req, res) => {
-    let index = cheeses.findIndex(c => c.id == req.params.id);
+router.delete('/:id', async (req, res) => {
+    let cheese = await Cheese.findById(req.params.id);
 
-    if (index == -1) {
+    if (!cheese) {
         return res.status(404).json({ msg: 'Not Found' });
     }
 
-    cheeses.splice(index, 1);
+   await Cheese.findByIdAndDelete(req.params.id);
     return res.status(204).json();
 });
 
