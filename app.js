@@ -5,6 +5,8 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import mongoose from 'mongoose';
 
+import cors from 'cors'
+
 // controllers
 import cheesesController from './controllers/cheeses.js';
 
@@ -32,6 +34,12 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 mongoose.connect(process.env.DB, {})
 .then((res) => console.log('Connected to MongoDB'))
 .catch((err) => console.log(`Connection Failure: ${err}`));
+
+// cors: allow angular client http access
+app.use(cors({
+    origin: process.env.CLIENT_URL,
+    methods: 'GET,POST,PUT,DELETE,HEAD,OPTIONS'
+}));
 
 // url dispatching
 app.use('/api/v1/cheeses', cheesesController);
