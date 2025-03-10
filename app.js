@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import mongoose from 'mongoose';
 
 import cors from 'cors'
+import path from 'path';
 
 // controllers
 import cheesesController from './controllers/cheeses.js';
@@ -14,6 +15,10 @@ import cheesesController from './controllers/cheeses.js';
 const app = express();
 
 app.use(bodyParser.json());
+
+// get public path for angular client app
+const __dirname = path.resolve();
+app.use(express.static(`${__dirname}/public`));
 
 // swagger config
 const docOptions = {
@@ -43,6 +48,9 @@ app.use(cors({
 
 // url dispatching
 app.use('/api/v1/cheeses', cheesesController);
+app.use('*', (req, res) => {
+    res.sendFile(`${__dirname}/public/index.html`);
+});
 
 // start web server
 app.listen(3000, () => {
