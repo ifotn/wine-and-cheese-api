@@ -29,7 +29,15 @@ const setTokenCookie = (res, token) => {
         secure: true,
         sameSite: 'None'
     });
-}
+};
+
+// expire cookie holding JWT 
+const clearTokenCookie = (res) => {
+    res.cookie('authToken', '', {
+        httpOnly: true,
+        expires: new Date(0)
+    });
+};
 
 router.post('/register', async (req, res) => {
     // use passport-local-mongoose inherited methods in user model to try creating new user
@@ -68,6 +76,17 @@ router.post('/login', async (req, res) => {
         else {
             return res.status(401).json({ msg: 'Invalid Login' });
         }
+    }
+    catch (err) {
+        return res.status(400).json(err);
+    }
+});
+
+router.get('/logout', (req, res) => {
+    try {
+        // expire http only cookie holding jwt
+        clearTokenCookie(res);
+        return res.status(200).json({ msg: 'User logged out' });
     }
     catch (err) {
         return res.status(400).json(err);
