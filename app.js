@@ -8,8 +8,13 @@ import mongoose from 'mongoose';
 import cors from 'cors'
 import path from 'path';
 
+// passport auth
+import passport from 'passport';
+import User from './models/user.js';
+
 // controllers
 import cheesesController from './controllers/cheeses.js';
+import usersController from './controllers/users.js';
 
 // create express server object
 const app = express();
@@ -46,8 +51,15 @@ app.use(cors({
     methods: 'GET,POST,PUT,DELETE,HEAD,OPTIONS'
 }));
 
+// passport auth config
+app.use(passport.initialize());
+
+// passport-local is the default
+passport.use(User.createStrategy());
+
 // url dispatching
 app.use('/api/v1/cheeses', cheesesController);
+app.use('/api/v1/users', usersController);
 app.use('*', (req, res) => {
     res.sendFile(`${__dirname}/public/index.html`);
 });
