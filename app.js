@@ -53,7 +53,9 @@ mongoose.connect(process.env.DB, {})
 // cors: allow angular client http access
 app.use(cors({
     origin: process.env.CLIENT_URL,
-    methods: 'GET,POST,PUT,DELETE,HEAD,OPTIONS'
+    methods: 'GET,POST,PUT,DELETE,HEAD,OPTIONS',
+    credentials: true,
+    allowedHeaders: 'Content-Type,Authorization'
 }));
 
 // passport auth config

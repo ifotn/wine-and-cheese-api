@@ -71,7 +71,7 @@ router.post('/login', async (req, res) => {
             setTokenCookie(res, authToken);
 
             //console.log(`authToken: ${authToken}`);
-            return res.status(200).json(req.body.username);
+            return res.status(200).json({ "username": req.body.username });
         }
         else {
             return res.status(401).json({ msg: 'Invalid Login' });
