@@ -2,6 +2,9 @@ import express from 'express';
 // model ref
 import Cheese from '../models/cheese.js';
 
+// jwt for auth on private methods (post / put / delete)
+import jwt from 'jsonwebtoken';
+
 // create express router object
 const router = express.Router();
 
@@ -83,8 +86,25 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
     try {
-        await Cheese.create(req.body);
-        return res.status(201).json();  // 201: resource created
+        // validate jwt
+        const token = req.cookies.authToken;
+
+        if (token) {
+            const decode = jwt.verify(token, process.env.PASSPORT_SECRET);
+            if (decode) {
+                // valid jwt => create new cheese & send ok response
+                await Cheese.create(req.body);
+                return res.status(201).json();  // 201: resource created
+            }
+            else {
+                // invalid jwt
+                return res.status(401).json({ msg: 'Unauthorized' });
+            }
+        }
+        else {
+            // no jwt
+            return res.status(401).json({ msg: 'Unauthorized' });
+        }
     }
     catch (err) {
         return res.status(400).json({ err: `Bad Request: ${err}` });
@@ -123,18 +143,36 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
     try {
-        let cheese = await Cheese.findById(req.params.id);
+        // validate jwt
+        const token = req.cookies.authToken;
 
-        if (!cheese) {
-            return res.status(404).json({ msg: 'Not Found' });
+        if (token) {
+            const decode = jwt.verify(token, process.env.PASSPORT_SECRET);
+
+            if (decode) {
+                // valid jwt
+                let cheese = await Cheese.findById(req.params.id);
+
+                if (!cheese) {
+                    return res.status(404).json({ msg: 'Not Found' });
+                }
+
+                if (req.params.id != req.body._id) {
+                    return res.status(400).json({ msg: 'Bad Request: _ids do not match' });
+                }
+
+                await Cheese.findByIdAndUpdate(req.params.id, req.body);
+                return res.status(204).json(); // 204: resource modified
+            }
+            else {
+                // invalid jwt
+                return res.status(401).json({ msg: 'Unauthorized' });
+            }   
         }
-
-        if (req.params.id != req.body._id) {
-            return res.status(400).json({ msg: 'Bad Request: _ids do not match' });
+        else {
+            // no jwt
+            return res.status(401).json({ msg: 'Unauthorized' });
         }
-
-        await Cheese.findByIdAndUpdate(req.params.id, req.body);
-        return res.status(204).json(); // 204: resource modified
     }
     catch (err) {
         return res.status(400).json({ err: `Bad Request: ${err}` });
@@ -160,14 +198,31 @@ router.put('/:id', async (req, res) => {
  *         description: Not found
  */
 router.delete('/:id', async (req, res) => {
-    let cheese = await Cheese.findById(req.params.id);
+    const token = req.cookies.authToken;
 
-    if (!cheese) {
-        return res.status(404).json({ msg: 'Not Found' });
+    if (token) {
+        const decode = jwt.verify(token, process.env.PASSPORT_SECRET);
+
+        if (decode) {
+            // valid jwt
+            let cheese = await Cheese.findById(req.params.id);
+
+            if (!cheese) {
+                return res.status(404).json({ msg: 'Not Found' });
+            }
+
+            await Cheese.findByIdAndDelete(req.params.id);
+            return res.status(204).json();
+       }
+       else {
+            // invalid jwt
+            return res.status(401).json({ msg: 'Unauthorized' });
+       }   
     }
-
-   await Cheese.findByIdAndDelete(req.params.id);
-    return res.status(204).json();
+    else {
+        // no jwt
+        return res.status(401).json({ msg: 'Unauthorized' });
+    }  
 });
 
 // make controller public to rest of the app
