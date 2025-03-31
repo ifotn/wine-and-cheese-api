@@ -2,9 +2,42 @@ import express from 'express';
 import passport from 'passport';
 import User from '../models/user.js';
 import jwt from 'jsonwebtoken';
+import sgMail from '@sendgrid/mail';
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // create express router
 const router = express.Router();
+
+// SendGrid email test method
+const sendMail = () => {
+    // create message w/4 basic email properties
+    const msg = {
+        to: 'some@lakeheadu.ca', 
+        from: process.env.MAIL_FROM,
+        subject: 'Testing SendGrid Email from our API',
+        html: '<h1>Test Email</h1><p>This is a test message.</p>'
+    };
+
+    // try sending the message via SendGrid
+    sgMail.send(msg)
+    .then(() => {
+        console.log('Email sent')
+    })
+    .catch((error) => {
+        console.log(error);
+    })
+};
+
+router.get('/send-email', (req, res) => {
+    try {
+        sendMail();
+        return res.status(200).json({ msg: 'Email Sent' });
+    }
+    catch (err) {
+        res.status(400).json(err);
+    }
+});
 
 // JWT creation on successful login
 const generateToken = (user) => {
