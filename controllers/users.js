@@ -149,6 +149,30 @@ router.post('/login', async (req, res) => {
     }
 });
 
+router.post('/verify-code', async (req, res) => {
+    // check db for username / verification code combo
+    const tempSession = await TempSession.findOne(req.body);
+
+    // check if code found for this user
+    if (!tempSession) {
+        return res.status(401).json({ msg: 'Unauthorized' });
+    }
+
+    // fetch user
+    const user = await User.findOne({ username: tempSession.username });
+
+    // create jwt with user info
+    const authToken = generateToken(user);
+
+    // set httponly cookie containing new jwt
+    setTokenCookie(res, authToken);
+
+    // delete temp session holding the 2FA code
+    await TempSession.findByIdAndDelete(tempSession._id);
+
+    res.status(200).json({ msg: 'Verification Successful' });
+});
+
 router.get('/logout', (req, res) => {
     try {
         // expire http only cookie holding jwt
