@@ -3,6 +3,7 @@ import passport from 'passport';
 import User from '../models/user.js';
 import jwt from 'jsonwebtoken';
 import sgMail from '@sendgrid/mail';
+import TempSession from '../models/tempSession.js';
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -13,7 +14,7 @@ const router = express.Router();
 const sendMail = () => {
     // create message w/4 basic email properties
     const msg = {
-        to: 'some@lakeheadu.ca', 
+        to: 'rfreema1@lakeheadu.ca', 
         from: process.env.MAIL_FROM,
         subject: 'Testing SendGrid Email from our API',
         html: '<h1>Test Email</h1><p>This is a test message.</p>'
@@ -38,6 +39,26 @@ router.get('/send-email', (req, res) => {
         res.status(400).json(err);
     }
 });
+
+// send 2FA verification code using SendGrid
+const sendVerificationCode = async (username, verificationCode) => {
+    // set up message
+    const msg = {
+        from: process.env.MAIL_FROM,
+        to: username,
+        subject: 'Your Wine and Cheese Verfication Code',
+        html: `<h1>Your Verification Code</h1><h3>${verificationCode}</h3><p>This is valid for 10 minutes.</p>`
+    };
+
+    // send message
+    sgMail.send(msg)
+    .then(() => {
+        console.log('Verification Code Sent');
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+};
 
 // JWT creation on successful login
 const generateToken = (user) => {
@@ -97,13 +118,26 @@ router.post('/login', async (req, res) => {
     try {
         const { user } = await User.authenticate()(req.body.username, req.body.password);
         if (user) {
-            // create jwt with user info
-            const authToken = generateToken(user);
+            // disabling JWT & replacing w/2FA => jwt moved AFTER 2FA verification
+            // // create jwt with user info
+            // const authToken = generateToken(user);
 
-            // set httponly cookie containing new jwt
-            setTokenCookie(res, authToken);
+            // // set httponly cookie containing new jwt
+            // setTokenCookie(res, authToken);
 
             //console.log(`authToken: ${authToken}`);
+            
+            // 2FA start: generate code & email to user to be verified
+            const verificationCode = Math.floor(100000 + Math.random() * 90000).toString();
+
+            // save temp Code to db for 10 minutes
+            const tempSession = new TempSession({
+                username: req.body.username,
+                verificationCode: verificationCode
+            });
+            await tempSession.save();
+            await sendVerificationCode(req.body.username, verificationCode);
+
             return res.status(200).json({ "username": req.body.username });
         }
         else {
